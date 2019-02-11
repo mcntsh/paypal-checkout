@@ -1,76 +1,77 @@
 /* @flow */
 
 import './tests';
+import { setSDKScriptUrl } from './tests/common';
 
 window.mockDomain = 'mock://www.merchant-site.com';
 
+<<<<<<< HEAD
 window.paypal.setup({
     env: 'test'
 });
 
 const MAX_OVERALL_MEMORY = 1400;
 const MAX_TEST_MEMORY = 80;
+=======
+const MEM_PER_TEST = 2;
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
 
-let memoryReported = (window.performance && window.performance.memory &&
+const memoryReported = (window.performance && window.performance.memory &&
                       window.performance.memory.usedJSHeapSize);
 
 function getMemory() : number {
     return window.performance.memory.usedJSHeapSize / Math.pow(2, 20);
 }
 
-let startMem;
+let maxMem = getMemory() * 2;
 let originalUserAgent;
 
 beforeEach(() => {
     if (memoryReported) {
-        startMem = getMemory();
+        maxMem += MEM_PER_TEST;
     }
 
-    // window.console.clear();
+    // eslint-disable-next-line unicorn/prefer-add-event-listener
     window.onerror = () => {
         // pass
     };
 
     window.__CACHE_START_TIME__ = Date.now();
-
     originalUserAgent = window.navigator.userAgent;
 
-    window.paypal.postRobot.CONFIG.ALLOW_POSTMESSAGE_POPUP = true;
+    setSDKScriptUrl();
 
     delete window.__test__;
 });
 
 afterEach(() => {
-
     window.localStorage.clear();
     delete window.__paypal_storage__;
     delete window.__paypal_global__;
+
+    window.location.hash = '';
 
     Object.defineProperty(window.navigator, 'userAgent', {
         value:        originalUserAgent,
         configurable: true
     });
 
+    delete window.navigator.mockUserAgent;
     delete window.document.documentMode;
 
-    if (window.gc) {
-        window.gc();
-    }
-
-    if (memoryReported) {
-        let mem = getMemory();
-        let diff = mem - startMem;
-
-        if (mem > MAX_OVERALL_MEMORY) {
-            throw new Error(`Overall memory exceeded ${ MAX_OVERALL_MEMORY }mb - ${ mem.toFixed(2) }`);
-        }
-
-        if (diff > MAX_TEST_MEMORY) {
-            throw new Error(`Test memory exceeded ${ MAX_TEST_MEMORY }mb - ${ diff.toFixed(2) }`);
-        }
-    }
-    
-    window.paypal.postRobot.bridge.destroyBridges();
-
     return window.paypal.destroyAll();
+});
+
+after(() => {
+    if (memoryReported) {
+        if (window.gc) {
+            window.gc();
+        }
+
+        const mem = getMemory();
+
+        if (mem > maxMem) {
+            // throw new Error(`Overall memory exceeded ${ parseInt(maxMem, 10) }mb - ${ mem.toFixed(2) }mb used`);
+        }
+    }
 });

@@ -1,17 +1,19 @@
 /* @flow */
 
-import { CONFIG as POSTROBOT_CONFIG } from 'post-robot/src';
-import { setTransport, getTransport, addPayloadBuilder, addHeaderBuilder, addMetaBuilder,
-    addTrackingBuilder, init, logLevels, config as loggerConfig } from 'beaver-logger/client';
-import { getParent } from 'cross-domain-utils/src';
+import { getLogger } from '@paypal/sdk-client/src';
+import { getQueryParam } from 'belter/src';
+import { FPTI_KEY } from '@paypal/sdk-constants/src';
 
-import { config } from '../config';
-import { FPTI, PAYMENT_TYPE } from '../constants';
+import { FPTI_CONTEXT_TYPE } from '../constants';
 
+<<<<<<< HEAD
 import { getSessionID, getButtonSessionID } from './session';
 import { proxyMethod } from './proxy';
 import { once, isPayPalDomain } from './util';
 import { getQueryParam } from './dom';
+=======
+import { getButtonSessionID } from './session';
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
 
 function getRefererDomain() : string {
     return (window.xchild && window.xchild.getParentDomain)
@@ -19,17 +21,17 @@ function getRefererDomain() : string {
         : window.location.host;
 }
 
-let setupProxyLogTransport = once(() => {
-    setTransport(proxyMethod('log', getParent(window), getTransport()));
-});
-
-function getToken() : ?string {
+function getOrderID() : ?string {
     if (window.root && window.root.token) {
         return window.root.token;
     }
 
+<<<<<<< HEAD
     if (isPayPalDomain()) {
         let queryToken = getQueryParam('token');
+=======
+    const queryToken = getQueryParam('token');
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
 
         if (queryToken) {
             return queryToken;
@@ -37,88 +39,28 @@ function getToken() : ?string {
     }
 }
 
-export function initLogger() {
-
-    setupProxyLogTransport();
-
-    addPayloadBuilder(() => {
-        return {
-            referer: getRefererDomain(),
-            host:    window.location.host,
-            path:    window.location.pathname,
-            env:     config.env,
-            country: config.locale.country,
-            lang:    config.locale.lang,
-            uid:     getSessionID(),
-            ver:     __PAYPAL_CHECKOUT__.__MINOR_VERSION__
-        };
-    });
-
-    addHeaderBuilder(() => {
-        return {
-            'x-app-name': 'checkoutjs'
-        };
-    });
-
-    addMetaBuilder(() => {
-        return {
-            state: config.state
-        };
-    });
-
-    addTrackingBuilder((payload = {}) => {
-
-        let sessionID       = getSessionID();
-        let paymentToken    = getToken();
-        let buttonSessionID = payload[FPTI.KEY.BUTTON_SESSION_UID] || getButtonSessionID();
+export function setupLogger() {
+    getLogger().addTrackingBuilder(() => {
+        const orderID = getOrderID();
+        const buttonSessionID = getButtonSessionID();
 
         let contextType;
         let contextID;
 
-        if (paymentToken) {
-            contextType = FPTI.CONTEXT_TYPE[PAYMENT_TYPE.EC_TOKEN];
-            contextID   = paymentToken;
+        if (orderID) {
+            contextType = FPTI_CONTEXT_TYPE.ORDER_ID;
+            contextID = orderID;
         } else if (buttonSessionID) {
-            contextType = FPTI.CONTEXT_TYPE.BUTTON_SESSION_ID;
-            contextID   = buttonSessionID;
-        } else {
-            contextType = payload[FPTI.KEY.CONTEXT_TYPE];
-            contextID   = payload[FPTI.KEY.CONTEXT_ID];
+            contextType = FPTI_CONTEXT_TYPE.BUTTON_SESSION_ID;
+            contextID = buttonSessionID;
         }
 
         return {
-            [ FPTI.KEY.FEED ]:               FPTI.FEED.CHECKOUTJS,
-            [ FPTI.KEY.DATA_SOURCE ]:        FPTI.DATA_SOURCE.CHECKOUT,
-            [ FPTI.KEY.CONTEXT_TYPE ]:       contextType,
-            [ FPTI.KEY.CONTEXT_ID ]:         contextID,
-            [ FPTI.KEY.SELLER_ID ]:          config.merchantID,
-            [ FPTI.KEY.SESSION_UID ]:        sessionID,
-            [ FPTI.KEY.BUTTON_SESSION_UID ]: buttonSessionID,
-            [ FPTI.KEY.VERSION ]:            config.version,
-            [ FPTI.KEY.TOKEN ]:              paymentToken,
-            [ FPTI.KEY.REFERER ]:            getRefererDomain()
+            [FPTI_KEY.CONTEXT_TYPE]:       contextType,
+            [FPTI_KEY.CONTEXT_ID]:         contextID,
+            [FPTI_KEY.BUTTON_SESSION_UID]: buttonSessionID,
+            [FPTI_KEY.TOKEN]:              orderID,
+            [FPTI_KEY.REFERER]:            getRefererDomain()
         };
     });
-
-    let prefix = 'ppxo';
-
-    init({
-        uri:            config.loggerUrl,
-        heartbeat:      false,
-        logPerformance: false,
-        prefix,
-        logLevel:       __PAYPAL_CHECKOUT__.__DEFAULT_LOG_LEVEL__
-    });
-}
-
-export function setLogLevel(logLevel : string) {
-
-    if (logLevels.indexOf(logLevel) === -1) {
-        throw new Error(`Invalid logLevel: ${ logLevel }`);
-    }
-
-    config.logLevel = logLevel;
-    loggerConfig.logLevel = logLevel;
-    POSTROBOT_CONFIG.LOG_LEVEL = logLevel;
-    window.LOG_LEVEL = logLevel;
 }

@@ -2,68 +2,68 @@
 /* eslint max-lines: 0 */
 
 import { ZalgoPromise } from 'zalgo-promise/src';
+import { FUNDING } from '@paypal/sdk-constants/src';
 
-import { generateECToken, createTestContainer, destroyTestContainer, IPHONE6_USER_AGENT, assert } from '../common';
+import { generateOrderID, createTestContainer, destroyTestContainer, IPHONE6_USER_AGENT, assert, mockProp, WEBVIEW_USER_AGENT } from '../common';
 
-for (let flow of [ 'popup', 'iframe' ]) {
+for (const flow of [ 'popup', 'iframe' ]) {
 
     describe(`paypal multiple button component happy path on ${ flow }`, () => {
 
+
         beforeEach(() => {
             createTestContainer();
-            window.paypal.Checkout.contexts.iframe = (flow === 'iframe');
+            if (flow === 'iframe') {
+                window.navigator.mockUserAgent = WEBVIEW_USER_AGENT;
+            }
         });
 
         afterEach(() => {
             destroyTestContainer();
-            window.location.hash = '';
-            window.paypal.Checkout.contexts.iframe = false;
         });
 
-        let cases = [
+        const cases = [
 
             {
-                source:   window.paypal.FUNDING.CARD,
-                fragment: 'guesturl=true',
-                locale:   'en_US'
+                source:   FUNDING.CARD,
+                fragment: 'guesturl=true'
             },
 
             {
-                source:    window.paypal.FUNDING.VENMO,
+                source:    FUNDING.VENMO,
                 fragment:  'checkouturl=true',
-                locale:    'en_US',
                 userAgent: IPHONE6_USER_AGENT
             },
 
             {
-                source:   window.paypal.FUNDING.CREDIT,
-                fragment: 'checkouturl=true',
-                locale:   'en_US'
+                source:   FUNDING.CREDIT,
+                fragment: 'checkouturl=true'
             },
 
             {
-                source:   window.paypal.FUNDING.IDEAL,
+                source:   FUNDING.IDEAL,
                 fragment: 'checkouturl=true',
-                locale:   'nl_NL',
+                country:   'NL',
                 commit:   true
             },
 
             {
-                source:   window.paypal.FUNDING.ELV,
+                source:   FUNDING.SEPA,
                 fragment: 'guesturl=true',
-                locale:   'de_DE'
+                country:   'DE'
             }
 
         ];
 
         // $FlowFixMe
-        for (let { source, fragment, locale, userAgent, commit } of cases) {
+        for (const { source, fragment, country, userAgent, commit } of cases) {
             it(`should render multiple buttons including ${ source }, click on the ${ source } button, and send the correct url params`, (done) => {
 
                 if (userAgent) {
                     window.navigator.mockUserAgent = userAgent;
                 }
 
+<<<<<<< HEAD
                 let allowed;
                 let remembered;
                 let decorate;
@@ -80,12 +80,24 @@ for (let flow of [ 'popup', 'iframe' ]) {
                 }
 
                 let checkoutToken = generateECToken();
+=======
+                const orderID = generateOrderID();
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
 
-                window.paypal.Button.render({
+                const mockEligibility = mockProp(window.__TEST_FUNDING_ELIGIBILITY__[source], 'eligible', true);
+                const mockCountry = mockProp(window, '__TEST_LOCALE_COUNTRY__', country || 'US');
 
+<<<<<<< HEAD
                     test: { flow, action: 'checkout', remembered, selector: `[data-funding-source="${ source }"]` },
+=======
+                if (source === FUNDING.VENMO) {
+                    window.__TEST_REMEMBERED_FUNDING__.push(FUNDING.VENMO);
+                }
+                
+                window.paypal.Buttons({
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
 
-                    locale,
+                    test: { flow, action: 'checkout', selector: `[data-funding-source="${ source }"]` },
 
                     commit,
 
@@ -93,22 +105,30 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         layout: 'vertical'
                     },
 
+<<<<<<< HEAD
                     funding: {
                         allowed
                     },
 
                     payment() : string | ZalgoPromise<string> {
                         return checkoutToken;
+=======
+                    createOrder() : string | ZalgoPromise<string> {
+                        return ZalgoPromise.resolve(orderID);
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
                     },
 
-                    onAuthorize(data) : void {
-                        assert.ok(data.currentUrl.indexOf(`token=${ checkoutToken }`) !== -1);
+                    onApprove(data) : void {
+                        assert.ok(data.currentUrl.indexOf(`token=${ orderID }`) !== -1);
                         assert.ok(data.currentUrl.indexOf(fragment) !== -1);
                         assert.ok(data.currentUrl.indexOf(`fundingSource=${ source }`) !== -1);
+<<<<<<< HEAD
                         assert.ok(data.currentUrl.indexOf(`&ba_token=`) === -1);
                         assert.ok(data.currentUrl.indexOf(`?ba_token=`) === -1);
                         assert.ok(data.currentUrl.indexOf(`billingurl`) === -1);
                         window.paypal.Button.props.funding.decorate = decorate;
+=======
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
                         return done();
                     },
 
@@ -116,7 +136,14 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         return done(new Error('Expected onCancel to not be called'));
                     }
 
-                }, '#testContainer');
+                }).render('#testContainer');
+
+                mockEligibility.cancel();
+                mockCountry.cancel();
+
+                if (source === FUNDING.VENMO) {
+                    window.__TEST_REMEMBERED_FUNDING__.splice(window.__TEST_REMEMBERED_FUNDING__.indexOf(FUNDING.VENMO), 1);
+                }
             });
         }
     });

@@ -1,8 +1,8 @@
-/* @flow weak */
-/* eslint max-lines: 0 */
+/* @flow */
 
-import { ENV, COUNTRY, LANG } from '../constants';
+import { getPayPalDomain } from '@paypal/sdk-client/src';
 
+<<<<<<< HEAD
 function getDefaultEnv() : $Values<typeof ENV> {
     if (__TEST__) {
         return ENV.TEST;
@@ -28,14 +28,20 @@ function getDefaultEnv() : $Values<typeof ENV> {
 }
 
 export let config = {
+=======
+export const SESSION_LIFETIME = 5 * 60 * 1000;
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
 
-    scriptUrl: __TEST__
-        ? `//${ window.location.host }/base/src/load.js`
-        : `//www.paypalobjects.com/api/${ __FILE_NAME__ }`,
+const CHECKOUT_URI = {
+    local:      `/webapps/hermes?ul=0`,
+    stage:      `/checkoutnow`,
+    sandbox:    `/checkoutnow`,
+    production: `/checkoutnow`
+}[__ENV__];
 
-    // eslint-disable-next-line security/detect-unsafe-regex
-    paypal_domain_regex: /^(https?|mock):\/\/[a-zA-Z0-9_.-]+\.paypal\.com(:\d+)?$/,
+const URI = __TEST__
 
+<<<<<<< HEAD
     version: __PAYPAL_CHECKOUT__.__MINOR_VERSION__,
 
     cors: true,
@@ -1097,5 +1103,44 @@ export let config = {
         [COUNTRY.ZA]: [ LANG.EN, LANG.FR, LANG.ES, LANG.ZH ],
         [COUNTRY.ZM]: [ LANG.EN, LANG.FR, LANG.ES, LANG.ZH ],
         [COUNTRY.ZW]: [ LANG.EN ]
+=======
+    ? {
+        CHECKOUT: `/base/test/windows/checkout/index.htm?checkouturl=true`,
+        ALTPAY:   `/base/test/windows/checkout/index.htm?checkouturl=true`,
+        GUEST:    `/base/test/windows/checkout/index.htm?guesturl=true`,
+        BUTTON:   `/base/test/windows/button/index.htm`,
+        CARD:     `/base/test/windows/card-fields/index.htm`
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
     }
-};
+
+    : {
+        CHECKOUT: CHECKOUT_URI,
+        ALTPAY:   `/latinumcheckout`,
+        GUEST:    `/webapps/xoonboarding`,
+        BUTTON:   `/sdk/js/smart-buttons`,
+        CARD:     `/webapps/hermes/card-fields`
+    };
+
+export function getPayPalUrl() : string {
+    return getPayPalDomain();
+}
+
+export function getCheckoutUrl() : string {
+    return `${ getPayPalDomain() }${ URI.CHECKOUT }`;
+}
+
+export function getButtonUrl() : string {
+    return `${ getPayPalDomain() }${ URI.BUTTON }`;
+}
+
+export function getGuestUrl() : string {
+    return `${ getPayPalDomain() }${ URI.GUEST }`;
+}
+
+export function getCardUrl() : string {
+    return `${ getPayPalDomain() }${ URI.CARD }`;
+}
+
+export function getAltPayUrl() : string {
+    return `${ getPayPalDomain() }${ URI.ALTPAY }`;
+}

@@ -1,26 +1,21 @@
 /* @flow */
 
-import { getParent, isSameDomain } from 'cross-domain-utils/src';
-
-import { supportsPopups } from './device';
+import { isSameDomain } from 'cross-domain-utils/src';
+import { supportsPopups } from 'belter/src';
+import { isPayPalDomain } from '@paypal/sdk-client/src';
 
 export function allowIframe() : boolean {
+
+    if (!isPayPalDomain()) {
+        throw new Error(`Can only determine if iframe rendering is allowed on paypal domain`);
+    }
 
     if (!supportsPopups()) {
         return true;
     }
 
-    let parentWindow = getParent(window);
-    if (parentWindow && isSameDomain(parentWindow)) {
-        return true;
-    }
-
-    let parentComponentWindow = window.xchild && window.xchild.getParentComponentWindow();
+    const parentComponentWindow = window.xprops && window.xprops.getParent();
     if (parentComponentWindow && isSameDomain(parentComponentWindow)) {
-        return true;
-    }
-
-    if (__TEST__) {
         return true;
     }
 

@@ -1,13 +1,15 @@
 /* @flow */
 
-import { getButtonConfig } from '../../src/button/config';
-import { BUTTON_LABEL, BUTTON_SIZE, FUNDING, CARD } from '../../src/constants';
+import { BUTTON_LABEL, BUTTON_COLOR, BUTTON_SHAPE, BUTTON_LAYOUT } from '../../src/constants';
 
-const RESPONSIVE_WIDTHS = [ 92, 144, 212, /* 345, */ 460, 670 ];
+const RESPONSIVE_WIDTHS = [ 144, 222, 465, 670 ];
 
-type ButtonConfig = {
+type ButtonConfig = {|
     filename? : string,
     userAgent? : string,
+    container? : {
+        width : number
+    },
     button : {
         locale? : string,
         style? : {
@@ -15,248 +17,111 @@ type ButtonConfig = {
             size? : string,
             shape? : string,
             label? : string,
-            installmentperiod? : number
-        },
-        funding? : {
-            allowed? : Array<string>,
-            disallowed? : Array<string>
+            period? : number
         }
     }
-};
+|};
 
-export let buttonConfigs : Array<ButtonConfig> = [];
+export const buttonConfigs : Array<ButtonConfig> = [];
 
 buttonConfigs.push({
     button: {}
 });
 
-for (let label of Object.keys(BUTTON_LABEL)) {
-    label = BUTTON_LABEL[label];
-    if (label === BUTTON_LABEL.INSTALLMENT) {
-        continue;
-    }
+for (const label of [ BUTTON_LABEL.PAYPAL ]) {
 
-    if (getButtonConfig(label, 'allowPrimary')) {
+    for (const width of RESPONSIVE_WIDTHS) {
         buttonConfigs.push({
+            container: {
+                width
+            },
             button: {
                 style: {
                     label
                 }
             }
         });
+    }
 
-        for (let size of getButtonConfig(label, 'sizes')) {
-
-            if (size === BUTTON_SIZE.RESPONSIVE) {
-                for (let width of RESPONSIVE_WIDTHS) {
-                    buttonConfigs.push({
-                        container: {
-                            width
-                        },
-                        button: {
-                            style: {
-                                label,
-                                size
-                            }
-                        }
-                    });
-                }
-            } else {
-                buttonConfigs.push({
-                    button: {
-                        style: {
-                            label,
-                            size
-                        }
-                    }
-                });
-            }
-        }
-
-        for (let color of getButtonConfig(label, 'colors')) {
-            buttonConfigs.push({
-                button: {
-                    style: {
-                        label,
-                        color
-                    }
-                }
-            });
-        }
-
-        for (let shape of getButtonConfig(label, 'shapes')) {
-            buttonConfigs.push({
-                button: {
-                    style: {
-                        label,
-                        shape
-                    }
-                }
-            });
-        }
-
-        if (getButtonConfig(label, 'allowFundingIcons')) {
-            buttonConfigs.push({
-                button: {
-                    style: {
-                        label,
-                        fundingicons: true
-                    }
-                }
-            });
-
-            buttonConfigs.push({
-                button: {
-                    locale: 'pt_BR',
-                    style:  {
-                        label,
-                        fundingicons: true
-                    }
-                }
-            });
-
-            buttonConfigs.push({
-                button: {
-                    style: {
-                        label,
-                        fundingicons: true
-                    },
-                    funding: {
-                        disallowed: [ CARD.AMEX ]
-                    }
-                }
-            });
-        }
-
-        if (getButtonConfig(label, 'allowUnbranded')) {
-            buttonConfigs.push({
-                button: {
-                    style: {
-                        label,
-                        branding: true
-                    }
-                }
-            });
-        }
-
+    for (const color of [ BUTTON_COLOR.GOLD, BUTTON_COLOR.BLUE, BUTTON_COLOR.SILVER ]) {
         buttonConfigs.push({
             button: {
                 style: {
                     label,
-                    tagline: false
-                }
-            }
-        });
-
-        buttonConfigs.push({
-            button: {
-                style: {
-                    label,
-                    maxbuttons: 1
-                }
-            }
-        });
-
-        for (let shape of getButtonConfig(label, 'shapes')) {
-
-            buttonConfigs.push({
-                button: {
-                    style: {
-                        label,
-                        shape,
-                        height: 45,
-                        size:   BUTTON_SIZE.SMALL
-                    }
-                }
-            });
-        }
-
-        buttonConfigs.push({
-            button: {
-                style: {
-                    label,
-                    height: 45,
-                    size:   BUTTON_SIZE.SMALL
-                },
-                funding: {
-                    allowed: [ FUNDING.CREDIT ]
-                }
-            }
-        });
-
-        buttonConfigs.push({
-            container: {
-                width: 340
-            },
-            button: {
-                style: {
-                    label,
-                    height: 44,
-                    size:   BUTTON_SIZE.RESPONSIVE
-                }
-            }
-        });
-
-        buttonConfigs.push({
-            userAgent: 'iphone6',
-            container: {
-                width: 340
-            },
-            button: {
-                style: {
-                    label,
-                    height: 44,
-                    size:   BUTTON_SIZE.RESPONSIVE
-                },
-                funding: {
-                    allowed: [ FUNDING.VENMO ]
+                    color
                 }
             }
         });
     }
-}
 
-for (let color of getButtonConfig('paypal', 'colors')) {
+    for (const shape of [ BUTTON_SHAPE.RECT, BUTTON_SHAPE.PILL ]) {
+        buttonConfigs.push({
+            button: {
+                style: {
+                    label,
+                    shape
+                }
+            }
+        });
+
+        buttonConfigs.push({
+            button: {
+                style: {
+                    label,
+                    shape,
+                    height: 45
+                }
+            }
+        });
+    }
+
+    for (const layout of [ BUTTON_LAYOUT.VERTICAL, BUTTON_LAYOUT.HORIZONTAL ]) {
+        buttonConfigs.push({
+<<<<<<< HEAD
+            userAgent: 'iphone6',
+            container: {
+                width: 340
+            },
+=======
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
+            button: {
+                style: {
+                    label,
+                    layout
+                }
+            }
+        });
+    }
 
     buttonConfigs.push({
         button: {
             style: {
-                color,
-                layout: 'horizontal'
-            },
-            funding: {
-                allowed: [ FUNDING.CREDIT ]
+                label,
+                layout:  'horizontal',
+                tagline: false
             }
         }
     });
 
     buttonConfigs.push({
+<<<<<<< HEAD
         userAgent: 'iphone6',
         button:    {
+=======
+        container: {
+            width: 340
+        },
+        button: {
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
             style: {
-                color,
-                layout: 'horizontal'
-            },
-            funding: {
-                allowed: [ FUNDING.VENMO ]
+                label,
+                height: 44
             }
         }
     });
 
     buttonConfigs.push({
-        userAgent: 'iphone6',
-        button:    {
-            style: {
-                color,
-                layout: 'horizontal'
-            },
-            funding: {
-                allowed: [ FUNDING.VENMO ]
-            }
-        }
-    });
-
-    buttonConfigs.push({
+<<<<<<< HEAD
         userAgent: 'iphone6',
         button:    {
             style: {
@@ -415,6 +280,15 @@ for (let color of getButtonConfig('paypal', 'colors')) {
             },
             funding: {
                 allowed: [ FUNDING.SOFORT, FUNDING.MYBANK ]
+=======
+        container: {
+            width: 550
+        },
+        button: {
+            style: {
+                label,
+                height: 55
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
             }
         }
     });
@@ -459,25 +333,3 @@ for (let color of getButtonConfig('paypal', 'colors')) {
     //     }
     // });
 }
-
-
-/** INSTALLMENT BUTTON CONFIG **/
-
-buttonConfigs.push({
-    button: {
-        locale: 'pt_BR',
-        style:  {
-            label: 'installment'
-        }
-    }
-});
-
-buttonConfigs.push({
-    button: {
-        locale: 'pt_BR',
-        style:  {
-            label:             'installment',
-            installmentperiod: 4
-        }
-    }
-});

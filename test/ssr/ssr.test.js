@@ -1,82 +1,77 @@
 /* @flow */
+/* eslint no-restricted-globals: 0, promise/no-native: 0 */
+
+import { getWebpackConfig } from 'grumbler-scripts/config/webpack.config';
+import { html, type ElementNode } from 'jsx-pragmatic';
 
 import { webpackCompileToString } from '../screenshot/lib/compile';
-import { BUTTON_RENDER } from '../../webpack.config';
+import { testGlobals } from '../globals';
+
+const fundingEligibility = testGlobals.__paypal_checkout__.serverConfig.fundingEligibility;
 
 jest.setTimeout(120000);
 
-let buttonExports = {};
+const cache = {};
 
-beforeAll(async () => {
-    let script = await webpackCompileToString(BUTTON_RENDER);
+async function getButtonScript() : Promise<{ Buttons : (Object) => ElementNode, DEFAULT_PROPS : Object }> {
 
-    let exports = buttonExports; // eslint-disable-line no-unused-vars
+    const config = {
+        entry:         './src/buttons/template/componentTemplate.jsx',
+        libraryTarget: 'commonjs',
+        web:           false
+    };
+
+    const cacheKey = JSON.stringify(config);
+    if (cache[cacheKey]) {
+        return cache[cacheKey];
+    }
+
+    const script = await webpackCompileToString(getWebpackConfig(config));
+
+    const exports : Object = {};
     eval(script); // eslint-disable-line no-eval,security/detect-eval-with-expression
 
-    if (typeof buttonExports.componentTemplate !== 'function') {
+    if (typeof exports.Buttons !== 'function') {
         throw new TypeError(`Expected componentTemplate to be a function`);
     }
-});
 
-test(`Button should render with ssr, with minimal options`, () => {
+    cache[cacheKey] = exports;
 
-    let locale = 'en_US';
+    return exports;
+}
 
-    let style = {};
+test(`Button should render with ssr, with minimal options`, async () => {
 
-    let html = buttonExports.componentTemplate({
-        props: { locale, style }
-    });
+    const { Buttons } = await getButtonScript();
 
-    if (!html || typeof html !== 'string') {
+    const buttonHTML = Buttons({
+        locale:          { country: 'US', lang: 'en' },
+        platform:        'desktop',
+        sessionID:       'xyz',
+        buttonSessionID: 'abc',
+        fundingEligibility
+    }).render(html());
+
+    if (!buttonHTML || typeof buttonHTML !== 'string') {
         throw new Error(`Expected html to be a non-empty string`);
     }
 });
 
-test(`Button should render with ssr, with all options`, () => {
+test(`Button should fail to render with ssr, with invalid style option`, async () => {
 
-    let env = 'production';
-
-    let locale = 'fr_FR';
-
-    let style = {
-        size:   'medium',
-        color:  'blue',
-        shape:  'pill',
-        label:  'pay',
-        layout: 'horizontal',
-
-        maxbuttons: 2,
-        height:     45,
-
-        fundingicons: false,
-        branding:     true,
-        tagline:      false
-    };
-
-    let html = buttonExports.componentTemplate({
-        props: { env, locale, style }
-    });
-
-    if (!html || typeof html !== 'string') {
-        throw new Error(`Expected html to be a non-empty string`);
-    }
-});
-
-test(`Button should fail to render with ssr, with invalid style option`, () => {
-
-    let locale = 'en_US';
-
-    let style = {
-        color: 'vermillion'
-    };
+    const { Buttons } = await getButtonScript();
 
     let expectedErr;
 
     try {
-        buttonExports.componentTemplate({
-            props: { locale, style }
-        });
+        Buttons({
+            style:           { color: 'red' },
+            locale:          { country: 'US', lang: 'en' },
+            platform:        'desktop',
+            sessionID:       'xyz',
+            buttonSessionID: 'abc',
+            fundingEligibility
+        }).render(html());
     } catch (err) {
         expectedErr = err;
     }
@@ -86,23 +81,54 @@ test(`Button should fail to render with ssr, with invalid style option`, () => {
     }
 });
 
-test(`Button should fail to render with ssr, with invalid locale`, () => {
+test(`Button should fail to render with ssr, with invalid locale`, async () => {
 
-    let locale = 'en_XX';
-
-    let style = {};
+    const { Buttons } = await getButtonScript();
 
     let expectedErr;
 
     try {
-        buttonExports.componentTemplate({
-            props: { locale, style }
-        });
+        Buttons({
+            locale:          { country: 'FR', lang: 'de' },
+            platform:        'desktop',
+            sessionID:       'xyz',
+            buttonSessionID: 'abc',
+            fundingEligibility
+        }).render(html());
     } catch (err) {
         expectedErr = err;
     }
 
     if (!expectedErr) {
         throw new Error(`Expected button render to error out`);
+    }
+});
+
+test(`Button renderer should export DEFAULT_PROPS`, async () => {
+
+    const { DEFAULT_PROPS } = await getButtonScript();
+
+    if (!DEFAULT_PROPS) {
+        throw new Error(`Expected DEFAULT_PROPS to be exported`);
+    }
+
+    if (!DEFAULT_PROPS.hasOwnProperty('COMMIT')) {
+        throw new Error(`Expected DEFAULT_PROPS.COMMIT to be exported`);
+    }
+
+    if (!DEFAULT_PROPS.hasOwnProperty('VAULT')) {
+        throw new Error(`Expected DEFAULT_PROPS.VAULT to be exported`);
+    }
+
+    if (!DEFAULT_PROPS.hasOwnProperty('INTENT')) {
+        throw new Error(`Expected DEFAULT_PROPS.INTENT to be exported`);
+    }
+
+    if (!DEFAULT_PROPS.hasOwnProperty('ENV')) {
+        throw new Error(`Expected DEFAULT_PROPS.ENV to be exported`);
+    }
+
+    if (!DEFAULT_PROPS.hasOwnProperty('PLATFORM')) {
+        throw new Error(`Expected DEFAULT_PROPS.PLATFORM to be exported`);
     }
 });

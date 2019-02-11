@@ -3,14 +3,11 @@
         window.mockDomain = 'mock://www.paypal.com';
         var parentWindow = (window.opener || window.parent);
         window.__coverage__ = parentWindow.__coverage__;
-        if (parentWindow.paypal) {
-            window.__ALLOW_POSTMESSAGE_POPUP__ =
-                parentWindow.paypal.postRobot.CONFIG.ALLOW_POSTMESSAGE_POPUP;
-        }
+        window.navigator.mockUserAgent = parentWindow.navigator.mockUserAgent;
     </script>
 
-    <script src="/base/node_modules/babel-polyfill/dist/polyfill.js"></script>
-    <script src="/base/src/load.js" data-paypal-checkout></script>
+    <script src="/base/test/tests/globals.js"></script>
+    <script src="/base/test/paypal.js"></script>
     <script src="./index.js"></script>
 </body>
 

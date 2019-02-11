@@ -1,4 +1,5 @@
 /* @flow */
+<<<<<<< HEAD
 /* @jsx jsxDom */
 /* eslint max-lines: 0 */
 
@@ -55,82 +56,122 @@ export function containerTemplate({ id, props, CLASS, ANIMATION, CONTEXT, EVENT,
         event.preventDefault();
         event.stopPropagation();
         actions.close();
+=======
+/** @jsx node */
+/* eslint max-lines: off, react/jsx-max-depth: off */
+
+import { isIos, animate, noop, destroyElement } from 'belter/src';
+import { EVENT, type RenderOptionsType } from 'zoid/src';
+import { node, dom } from 'jsx-pragmatic/src';
+import { LOGO_COLOR, PPLogo, PayPalLogo } from '@paypal/sdk-logos/src';
+
+import type { CheckoutPropsType } from '../props';
+
+import { containerContent } from './containerContent';
+import { getContainerStyle, getSandboxStyle, CLASS } from './containerStyle';
+
+export function containerTemplate({ uid, tag, props, context, close, focus, doc, event, frame, prerenderFrame } : RenderOptionsType<CheckoutPropsType>) : HTMLElement {
+
+    const { locale } = props;
+    const { lang } = locale;
+
+    function closeCheckout(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        close();
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
     }
 
-    function focus(event) {
-        event.preventDefault();
-        event.stopPropagation();
+    function focusCheckout(e) {
+        e.preventDefault();
+        e.stopPropagation();
 
         if (isIos()) {
             // eslint-disable-next-line no-alert
             window.alert('Please switch tabs to reactivate the PayPal window');
         } else {
+<<<<<<< HEAD
             ZalgoPromise.try(actions.focus).catch(actions.close);
+=======
+            focus();
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
         }
     }
 
-    let style = props.style || {};
-    let overlayColor = style.overlayColor || CHECKOUT_OVERLAY_COLOR.BLACK;
-    let logoColor = LOGO_COLOR[overlayColor];
+    const { style = {} } = props;
 
-    let ppLogo = (typeof fundingLogos.pp === 'function')
-        ? fundingLogos.pp({ logoColor })
-        : fundingLogos.pp[logoColor];
+    const content = containerContent[lang];
 
-    let paypalLogo = (typeof fundingLogos.paypal === 'function')
-        ? fundingLogos.paypal({ logoColor })
-        : fundingLogos.paypal[logoColor];
+    const setupAnimations = (name) => {
+        return (el) => {
+            event.on(EVENT.DISPLAY, () => animate(el, `show-${ name }`, noop));
+            event.on(EVENT.CLOSE, () => animate(el, `hide-${ name }`, noop));
+        };
+    };
 
-    let el = (
-        <div id={ id } onClick={ focus } class={ `${ tag }-context-${ context } paypal-checkout-overlay ${ tag }-background-color-${ overlayColor } ${ tag }-logo-color-${ logoColor }` }>
-            <a href='#' class="paypal-checkout-close" onClick={ close } aria-label="close" role="button"></a>
-            <div class="paypal-checkout-modal">
-                <div class="paypal-checkout-logo">
-                    <img
-                        class="paypal-checkout-logo-pp" alt="pp"
-                        src={ `data:image/svg+xml;base64,${ btoa(ppLogo) }` } />
-                    <img
-                        class="paypal-checkout-logo-paypal" alt="paypal"
-                        src={ `data:image/svg+xml;base64,${ btoa(paypalLogo) }` } />
-                </div>
-                <div class="paypal-checkout-message">
-                    {content.windowMessage}
-                </div>
-                <div class="paypal-checkout-continue">
-                    <a onClick={ focus } href='#'>{content.continue}</a>
-                </div>
-                <div class="paypal-checkout-loader">
-                    <div class="paypal-spinner"></div>
-                </div>
+    let outlet;
+
+    if (frame && prerenderFrame) {
+        frame.classList.add(CLASS.COMPONENT_FRAME);
+        prerenderFrame.classList.add(CLASS.PRERENDER_FRAME);
+        
+        prerenderFrame.classList.add(CLASS.VISIBLE);
+        frame.classList.add(CLASS.INVISIBLE);
+    
+        event.on(EVENT.RENDERED, () => {
+            prerenderFrame.classList.remove(CLASS.VISIBLE);
+            prerenderFrame.classList.add(CLASS.INVISIBLE);
+    
+            frame.classList.remove(CLASS.INVISIBLE);
+            frame.classList.add(CLASS.VISIBLE);
+    
+            setTimeout(() => {
+                destroyElement(prerenderFrame);
+            }, 1);
+        });
+
+        outlet = (
+            <div class={ CLASS.OUTLET } onRender={ setupAnimations('component') }>
+                <node el={ frame } />
+                <node el={ prerenderFrame } />
             </div>
-
-            <div class="paypal-checkout-iframe-container">
-                {outlet}
-            </div>
-
-            <style>{getContainerStyle({ id, tag, CONTEXT, CLASS, ANIMATION })}</style>
-        </div>
-    );
-
-    let container = (
-        <html>
-            <body>
-                { el }
-            </body>
-        </html>
-    );
-
-    on(EVENT.CLOSE, () => {
-        el.className += ` ${ tag }-loading`;
-    });
+        );
+    }
 
     return (
-        <div id={ id } class="paypal-checkout-sandbox">
-            <style>{ getSandboxStyle({ id, ANIMATION }) }</style>
+        <div id={ uid } onRender={ setupAnimations('container') } class="paypal-checkout-sandbox">
+            <style>{ getSandboxStyle({ uid }) }</style>
 
-            <iframe title="PayPal Checkout Overlay" name={ `__paypal_checkout_sandbox_${ id }__` } scrolling="no" class="paypal-checkout-sandbox-iframe">
-                { container }
+            <iframe title="PayPal Checkout Overlay" name={ `__paypal_checkout_sandbox_${ uid }__` } scrolling="no" class="paypal-checkout-sandbox-iframe">
+                <html>
+                    <body>
+                        <div id={ uid } onClick={ focusCheckout } class={ `${ tag }-context-${ context } paypal-checkout-overlay` }>
+                            <a href='#' class="paypal-checkout-close" onClick={ closeCheckout } aria-label="close" role="button" />
+                            <div class="paypal-checkout-modal">
+                                <div class="paypal-checkout-logo">
+                                    <PPLogo logoColor={ LOGO_COLOR.WHITE } />
+                                    <PayPalLogo logoColor={ LOGO_COLOR.WHITE } />
+                                </div>
+                                <div class="paypal-checkout-message">
+                                    {content.windowMessage}
+                                </div>
+                                <div class="paypal-checkout-continue">
+                                    <a onClick={ focus } href='#'>{content.continueMessage}</a>
+                                </div>
+                                <div class="paypal-checkout-loader">
+                                    <div class="paypal-spinner" />
+                                </div>
+                            </div>
+
+                            <div class="paypal-checkout-iframe-container">
+                                { outlet }
+                            </div>
+
+                            <style>{ getContainerStyle({ uid, tag }) }</style>
+                        </div>
+                    </body>
+                </html>
             </iframe>
         </div>
-    );
+    ).render(dom({ doc }));
 }

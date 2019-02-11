@@ -1,29 +1,28 @@
 /* @flow */
 
-import { type ZalgoPromise } from 'zalgo-promise/src';
+import { ZalgoPromise } from 'zalgo-promise/src';
 
-import { generateECToken, createElement, createTestContainer, destroyTestContainer, assert } from '../common';
+import { generateOrderID, createTestContainer, destroyTestContainer, assert, WEBVIEW_USER_AGENT, runOnClick } from '../common';
 
-for (let flow of [ 'popup', 'iframe' ]) {
+for (const flow of [ 'popup', 'iframe' ]) {
 
     describe(`paypal checkout component error cases on ${ flow }`, () => {
 
         beforeEach(() => {
             createTestContainer();
-            window.paypal.Checkout.contexts.iframe = (flow === 'iframe');
+
+            if (flow === 'iframe') {
+                window.navigator.mockUserAgent = WEBVIEW_USER_AGENT;
+            }
         });
 
         afterEach(() => {
             destroyTestContainer();
-            window.paypal.Checkout.contexts.iframe = false;
         });
 
         it('should render checkout and return a blank token in payment', (done) => {
-
-            let testButton = createElement({ tag: 'button', id: 'testButton', container: 'testContainer' });
-
-            testButton.addEventListener('click', () => {
-                return window.paypal.Checkout.render({
+            runOnClick(() => {
+                return window.paypal.Checkout({
 
                     payment() : string {
                         return '';
@@ -35,28 +34,23 @@ for (let flow of [ 'popup', 'iframe' ]) {
                     },
 
                     onAuthorize() : void {
-                        return done(new Error('Expected onCancel to not be called'));
+                        return done(new Error('Expected onAuthorize to not be called'));
                     },
 
                     onCancel() : void {
                         return done(new Error('Expected onCancel to not be called'));
                     }
 
-                });
+                }).render('body');
             });
-
-            testButton.click();
         });
 
         it('should render checkout and return a promise for a blank token in payment', (done) => {
-
-            let testButton = createElement({ tag: 'button', id: 'testButton', container: 'testContainer' });
-
-            testButton.addEventListener('click', () => {
-                return window.paypal.Checkout.render({
+            runOnClick(() => {
+                return window.paypal.Checkout({
 
                     payment() : ZalgoPromise<string> {
-                        return window.paypal.Promise.resolve('');
+                        return ZalgoPromise.resolve('');
                     },
 
                     onError(err) : void {
@@ -72,18 +66,13 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         return done(new Error('Expected onCancel to not be called'));
                     }
 
-                });
+                }).render('body');
             });
-
-            testButton.click();
         });
 
         it('should render checkout and throw an error in payment', (done) => {
-
-            let testButton = createElement({ tag: 'button', id: 'testButton', container: 'testContainer' });
-
-            testButton.addEventListener('click', () => {
-                return window.paypal.Checkout.render({
+            runOnClick(() => {
+                return window.paypal.Checkout({
 
                     payment() {
                         throw new Error('error');
@@ -102,21 +91,16 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         return done(new Error('Expected onCancel to not be called'));
                     }
 
-                });
+                }).render('body');
             });
-
-            testButton.click();
         });
 
         it('should render checkout and return a rejected promise in payment', (done) => {
-
-            let testButton = createElement({ tag: 'button', id: 'testButton', container: 'testContainer' });
-
-            testButton.addEventListener('click', () => {
-                return window.paypal.Checkout.render({
+            runOnClick(() => {
+                return window.paypal.Checkout({
 
                     payment() : string | ZalgoPromise<string> {
-                        return window.paypal.Promise.reject(new Error('error'));
+                        return ZalgoPromise.reject(new Error('error'));
                     },
 
                     onError(err) : void {
@@ -132,50 +116,18 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         return done(new Error('Expected onCancel to not be called'));
                     }
 
-                });
+                }).render('body');
             });
-
-            testButton.click();
         });
-
-        it('should render checkout, then fall back and complete the payment', (done) => {
-
-            let testButton = createElement({ tag: 'button', id: 'testButton', container: 'testContainer' });
-
-            testButton.addEventListener('click', () => {
-                return window.paypal.Checkout.render({
-
-                    test: { action: 'fallback' },
-
-                    payment() : string | ZalgoPromise<string> {
-                        return generateECToken();
-                    },
-
-                    onAuthorize() : void {
-                        return done();
-                    },
-
-                    onCancel() : void {
-                        return done(new Error('Expected onCancel to not be called'));
-                    }
-
-                });
-            });
-
-            testButton.click();
-        });
-
+        
         it('should render checkout, then error out', (done) => {
-
-            let testButton = createElement({ tag: 'button', id: 'testButton', container: 'testContainer' });
-
-            testButton.addEventListener('click', () => {
-                return window.paypal.Checkout.render({
+            runOnClick(() => {
+                return window.paypal.Checkout({
 
                     test: { action: 'error' },
 
                     payment() : string | ZalgoPromise<string> {
-                        return generateECToken();
+                        return generateOrderID();
                     },
 
                     onError(err) : void {
@@ -191,21 +143,16 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         return done(new Error('Expected onCancel to not be called'));
                     }
 
-                });
+                }).render('body');
             });
-
-            testButton.click();
         });
 
         it('should render checkout, then throw an error in onAuthorize', (done) => {
-
-            let testButton = createElement({ tag: 'button', id: 'testButton', container: 'testContainer' });
-
-            testButton.addEventListener('click', () => {
-                return window.paypal.Checkout.render({
+            runOnClick(() => {
+                return window.paypal.Checkout({
 
                     payment() : string | ZalgoPromise<string> {
-                        return generateECToken();
+                        return generateOrderID();
                     },
 
                     onError(err) : void {
@@ -221,21 +168,16 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         return done(new Error('Expected onCancel to not be called'));
                     }
 
-                });
+                }).render('body');
             });
-
-            testButton.click();
         });
 
         it('should render checkout, then return a rejected promise in onAuthorize', (done) => {
-
-            let testButton = createElement({ tag: 'button', id: 'testButton', container: 'testContainer' });
-
-            testButton.addEventListener('click', () => {
-                return window.paypal.Checkout.render({
+            runOnClick(() => {
+                return window.paypal.Checkout({
 
                     payment() : string | ZalgoPromise<string> {
-                        return generateECToken();
+                        return generateOrderID();
                     },
 
                     onError(err) : void {
@@ -244,7 +186,7 @@ for (let flow of [ 'popup', 'iframe' ]) {
                     },
 
                     onAuthorize() : ZalgoPromise<void> {
-                        return new window.paypal.Promise((resolve, reject) => {
+                        return new ZalgoPromise((resolve, reject) => {
                             return reject(new Error('error'));
                         });
                     },
@@ -253,21 +195,16 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         return done(new Error('Expected onCancel to not be called'));
                     }
 
-                });
+                }).render('body');
             });
-
-            testButton.click();
         });
 
         it('should render checkout, then return an undefined rejected promise in onAuthorize', (done) => {
-
-            let testButton = createElement({ tag: 'button', id: 'testButton', container: 'testContainer' });
-
-            testButton.addEventListener('click', () => {
-                return window.paypal.Checkout.render({
+            runOnClick(() => {
+                return window.paypal.Checkout({
 
                     payment() : string | ZalgoPromise<string> {
-                        return generateECToken();
+                        return generateOrderID();
                     },
 
                     onError(err) : void {
@@ -276,7 +213,7 @@ for (let flow of [ 'popup', 'iframe' ]) {
                     },
 
                     onAuthorize() : ZalgoPromise<void> {
-                        return new window.paypal.Promise((resolve, reject) => {
+                        return new ZalgoPromise((resolve, reject) => {
                             return reject();
                         });
                     },
@@ -285,28 +222,24 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         return done(new Error('Expected onCancel to not be called'));
                     }
 
-                });
+                }).render('body');
             });
-
-            testButton.click();
         });
 
         if (flow === 'iframe') {
             it('should render checkout, window.open the iframe name, then complete the payment', (done) => {
-
-                let testButton = createElement({ tag: 'button', id: 'testButton', container: 'testContainer' });
-
-                testButton.addEventListener('click', () => {
+                runOnClick(() => {
                     let name;
 
-                    window.paypal.Checkout.render({
+
+                    window.paypal.Checkout({
 
                         onRender() {
                             name = this.childWindowName;
                         },
 
                         payment() : string | ZalgoPromise<string> {
-                            return generateECToken();
+                            return generateOrderID();
                         },
 
                         onAuthorize() : void {
@@ -316,21 +249,18 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         onCancel() : void {
                             return done(new Error('Expected onCancel to not be called'));
                         }
-                    });
+                    }).render('body');
 
                     window.open('', name);
                 });
-
-                testButton.click();
             });
         }
 
         if (flow === 'popup') {
             it('should render checkout without a click event and error out', (done) => {
-
-                window.paypal.Checkout.render({
+                window.paypal.Checkout({
                     payment() : string | ZalgoPromise<string> {
-                        return generateECToken();
+                        return generateOrderID();
                     },
 
                     onError(err) : void {
@@ -346,7 +276,7 @@ for (let flow of [ 'popup', 'iframe' ]) {
                         return done(new Error('Expected onCancel to not be called'));
                     }
 
-                });
+                }).render('body');
             });
         }
     });

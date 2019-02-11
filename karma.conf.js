@@ -1,66 +1,59 @@
 /* @flow */
+/* eslint import/no-default-export: off */
 
 import { getKarmaConfig } from 'grumbler-scripts/config/karma.conf';
 
-import { TEST } from './webpack.config';
+import { WEBPACK_CONFIG_TEST } from './webpack.config';
 
 export default function configKarma(karma : Object) {
 
-    let karmaConfig = getKarmaConfig(karma, {
+    const karmaConfig = getKarmaConfig(karma, {
         basePath: __dirname,
-        webpack:  TEST
+        webpack:  WEBPACK_CONFIG_TEST
     });
 
-    karmaConfig.files = [
-        {
-            pattern:  'test/lib/react_v15.1.0.js',
-            included: true,
-            served:   true
-        },
+    karma.set({
+        ...karmaConfig,
 
-        {
-            pattern:  'test/lib/react-dom_v15.1.0.js',
-            included: true,
-            served:   true
-        },
+        files: [
+            {
+                pattern:  'test/lib/react_v15.1.0.js',
+                included: true,
+                served:   true
+            },
 
-        {
-            pattern:  'test/lib/angular.min.js',
-            included: true,
-            served:   true
-        },
+            {
+                pattern:  'test/lib/react-dom_v15.1.0.js',
+                included: true,
+                served:   true
+            },
 
-        {
-            pattern:  'src/load.js',
-            included: true,
-            served:   true
-        },
-        
-        ...karmaConfig.files
-    ];
+            {
+                pattern:  'test/lib/angular.min.js',
+                included: true,
+                served:   true
+            },
 
-    karmaConfig.preprocessors['src/load.js'] = [ 'webpack', 'sourcemap' ];
-    karmaConfig.preprocessors['src/**/*.js'] = [ 'sourcemap' ];
+            {
+                pattern:  'test/tests/globals.js',
+                included: true,
+                served:   true
+            },
 
-    karmaConfig.proxies = {
-        '/tagmanager/': '/base/test/lib/'
-    };
+            {
+                pattern:  'test/paypal.js',
+                included: true,
+                served:   true
+            },
 
-    karmaConfig.client = {
-        captureConsole: karmaConfig.client.captureConsole,
-        mocha:          {
-            timeout: process.env.TRAVIS ? 60 * 1000 : 10 * 1000, // eslint-disable-line no-process-env
-            bail:    true
+            ...karmaConfig.files
+        ],
+
+        preprocessors: {
+            ...karmaConfig.preprocessors,
+
+            'src/index.js': [ 'webpack', 'sourcemap' ],
+            'src/**/*.js':  [ 'sourcemap' ]
         }
-    };
-
-    karmaConfig.webpack.module.rules
-        .find(rule => rule.loader === 'babel-loader')
-        .options.plugins.push([
-            'istanbul', {
-                only: `${ __dirname }/src`
-            }
-        ]);
-
-    karma.set(karmaConfig);
+    });
 }

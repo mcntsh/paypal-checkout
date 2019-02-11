@@ -1,40 +1,14 @@
 /* @flow */
 
-export const ENV = {
-    LOCAL:      'local',
-    STAGE:      'stage',
-    SANDBOX:    'sandbox',
-    PRODUCTION: 'production',
-    TEST:       'test',
-    DEMO:       'demo'
-};
-
-export const USERS = {
-    ALL:        'all',
-    REMEMBERED: 'remembered'
-};
-
-export const SOURCE = {
-    MANUAL:         'manual',
-    BUTTON_FACTORY: 'button_factory'
-};
-
 export const LOG_LEVEL = {
-    DEBUG: 'debug',
-    INFO:  'info',
-    WARN:  'warn',
-    ERROR: 'error'
+    DEBUG: ('debug' : 'debug'),
+    INFO:  ('info' : 'info'),
+    WARN:  ('warn' : 'warn'),
+    ERROR: ('error' : 'error')
 };
-
-export const PAYMENT_TYPE = {
-    EC_TOKEN: 'ec_token',
-    BA_TOKEN: 'ba_token',
-    PAY_ID:   'pay_id'
-};
-
-export const PPTM_ID = 'xo-pptm';
 
 export const ATTRIBUTE = {
+<<<<<<< HEAD
     BUTTON:         'data-button',
     FUNDING_SOURCE: 'data-funding-source',
     CARD:           'data-card',
@@ -46,8 +20,13 @@ export const ATTRIBUTE = {
 export const PLATFORM = {
     DESKTOP: 'desktop',
     MOBILE:  'mobile'
+=======
+    BUTTON:         ('data-button' : 'data-button'),
+    FUNDING_SOURCE: ('data-funding-source' : 'data-funding-source'),
+    CARD:           ('data-card' : 'data-card')
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
 };
 
-export const DEFAULT = 'default';
+export const DEFAULT = ('default' : 'default');
 
 

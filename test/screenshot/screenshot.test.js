@@ -5,8 +5,10 @@
 /* eslint unicorn/no-process-exit: 0 */
 
 import fs from 'fs-extra';
+import { getWebpackConfig } from 'grumbler-scripts/config/webpack.config';
 
-import { BASE } from '../../webpack.config';
+import { testGlobals } from '../globals';
+import globals from '../../globals';
 
 import { webpackCompile } from './lib/compile';
 import { openPage, takeScreenshot } from './lib/browser';
@@ -22,20 +24,23 @@ const USER_AGENTS = {
     iphone6: 'Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1'
 };
 
+const HEADLESS = true;
+
 jest.setTimeout(120000);
 
-let setupBrowserPage = (async () => {
-    let { browser, page } = await openPage(await webpackCompile(BASE));
+const setupBrowserPage = (async () => {
+    const { browser, page } = await openPage(await webpackCompile(getWebpackConfig({
+        entry:         './test/paypal.js',
+        libraryTarget: 'window',
+        test:          true,
+        vars:          { ...globals, ...testGlobals }
+    })), { headless: HEADLESS });
 
-    for (let filename of await fs.readdir(IMAGE_DIR)) {
+    for (const filename of await fs.readdir(IMAGE_DIR)) {
         if (filename.endsWith('-old.png')) {
             await fs.unlink(`${ IMAGE_DIR }/${ filename }`);
         }
     }
-
-    await page.evaluate(() => {
-        window.paypal.setup({ env: 'test' });
-    });
 
     return { browser, page };
 })();
@@ -43,40 +48,53 @@ let setupBrowserPage = (async () => {
 beforeAll(() => setupBrowserPage);
 
 afterAll(async () => {
-    let { browser } = await setupBrowserPage;
+    const { browser } = await setupBrowserPage;
     await browser.close();
 });
 
+<<<<<<< HEAD
 const total = buttonConfigs.length;
 let index = 1;
 
 for (let config of buttonConfigs) {
     let filename = config.filename || dotifyToString(config) || 'base';
+=======
+for (const config of buttonConfigs) {
+    const filename = config.filename || dotifyToString(config) || 'base';
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
 
     test(`Render button with ${ filename }`, async () => {
-        let { page } = await setupBrowserPage;
+        const { page } = await setupBrowserPage;
 
+<<<<<<< HEAD
         // fasten up the animation
         await page._client.send('Animation.setPlaybackRate', { playbackRate: 12.0 });
         let filepath = `${ IMAGE_DIR }/${ filename }.png`;
         let diffpath  = `${ IMAGE_DIR }/${ filename }-old.png`;
+=======
+        const filepath = `${ IMAGE_DIR }/${ filename }.png`;
+        const diffpath  = `${ IMAGE_DIR }/${ filename }-old.png`;
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
 
-        let { x, y, width, height } = await page.evaluate((options, userAgents) => {
+        const { x, y, width, height } = await page.evaluate(async (options, userAgents) => {
 
             // $FlowFixMe
             document.body.innerHTML = '';
 
-            let container = window.document.createElement('div');
+            const container = window.document.createElement('div');
             window.document.body.appendChild(container);
 
             if (options.container) {
                 container.style.width = `${ options.container.width }px`;
+            } else {
+                container.style.width = '200px';
             }
 
             if (options.userAgent) {
                 window.navigator.mockUserAgent = userAgents[options.userAgent];
             }
 
+<<<<<<< HEAD
             let decorate;
 
             if (options.button.funding && options.button.funding.allowed && options.button.funding.allowed.indexOf(window.paypal.FUNDING.VENMO) !== -1) {
@@ -92,8 +110,13 @@ for (let config of buttonConfigs) {
                 payment() { /* pass */ },
                 onAuthorize() { /* pass */ }
             }, options.button), container);
+=======
+            window.paypal.Buttons(options.button).render(container);
 
-            let rect = container.querySelector('iframe').getBoundingClientRect();
+            await new Promise(resolve => setTimeout(resolve, 100));
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
+
+            const rect = container.querySelector('iframe').getBoundingClientRect();
 
             delete window.navigator.mockUserAgent;
 
@@ -110,15 +133,23 @@ for (let config of buttonConfigs) {
 
         }, config, USER_AGENTS);
 
-        let existingExists = await fs.exists(filepath);
+        if (width === 0) {
+            throw new Error(`Button width is 0`);
+        }
 
-        let [ screenshot, existing ] = await Promise.all([
+        if (height === 0) {
+            throw new Error(`Button height is 0`);
+        }
+
+        const existingExists = await fs.exists(filepath);
+
+        const [ screenshot, existing ] = await Promise.all([
             takeScreenshot(page, { x, y, width, height }),
             existingExists ? readPNG(filepath) : null
         ]);
 
         if (existing) {
-            let delta = await diffPNG(screenshot, existing);
+            const delta = await diffPNG(screenshot, existing);
 
             if (delta > DIFF_THRESHOLD) {
                 await existing.write(diffpath);

@@ -1,7 +1,12 @@
 /* @flow */
-/* @jsx jsxDom */
+/** @jsx node */
 
-let checkoutComponentStyle = `
+import { node, dom } from 'jsx-pragmatic/src';
+import type { RenderOptionsType } from 'zoid/src/parent';
+
+import type { CheckoutPropsType } from '../props';
+
+const checkoutComponentStyle = `
 
     body {
         width: 100%;
@@ -49,9 +54,6 @@ let checkoutComponentStyle = `
     .spinner .loader {
         margin: 0 0 0 -55px;
         background-color: transparent;
-        -webkit-animation: rotation .7s infinite linear;
-        -moz-animation: rotation .7s infinite linear;
-        -o-animation: rotation .7s infinite linear;
         animation: rotation .7s infinite linear;
         border-left: 5px solid #cbcbca;
         border-right: 5px solid #cbcbca;
@@ -60,30 +62,6 @@ let checkoutComponentStyle = `
         border-radius: 100%
     }
 
-    @-webkit-keyframes rotation {
-        from {
-            -webkit-transform: rotate(0deg)
-        }
-        to {
-            -webkit-transform: rotate(359deg)
-        }
-    }
-    @-moz-keyframes rotation {
-        from {
-            -moz-transform: rotate(0deg)
-        }
-        to {
-            -moz-transform: rotate(359deg)
-        }
-    }
-    @-o-keyframes rotation {
-        from {
-            -o-transform: rotate(0deg)
-        }
-        to {
-            -o-transform: rotate(359deg)
-        }
-    }
     @keyframes rotation {
         from {
             transform: rotate(0deg)
@@ -94,8 +72,8 @@ let checkoutComponentStyle = `
     }
 `;
 
-// eslint-disable-next-line no-unused-vars
-export function componentTemplate({ jsxDom } : { jsxDom : Function }) : HTMLElement {
+export function componentTemplate({ doc, props } : RenderOptionsType<CheckoutPropsType>) : HTMLElement {
+    const { nonce } = props;
 
     return (
         <html>
@@ -105,16 +83,16 @@ export function componentTemplate({ jsxDom } : { jsxDom : Function }) : HTMLElem
             </head>
             <body>
                 <div class="preloader spinner">
-                    <style>
+                    <style nonce={ nonce }>
                         { checkoutComponentStyle }
                     </style>
 
                     <div class="spinWrap">
-                        <p class="spinnerImage"></p>
-                        <p class="loader"></p>
+                        <p class="spinnerImage" />
+                        <p class="loader" />
                     </div>
                 </div>
             </body>
         </html>
-    );
+    ).render(dom({ doc }));
 }

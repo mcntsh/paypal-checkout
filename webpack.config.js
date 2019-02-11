@@ -1,77 +1,24 @@
 /* @flow */
-/* eslint import/unambiguous: 0 */
-/* eslint import/no-nodejs-modules: 0 */
+/* eslint import/no-nodejs-modules: off, import/no-default-export: off */
 
-import fs from 'fs';
-import path from 'path';
+import { getWebpackConfig } from 'grumbler-scripts/config/webpack.config';
 
-import webpack from 'webpack';
-import CircularDependencyPlugin from 'circular-dependency-plugin';
-import UglifyJSPlugin from 'uglifyjs-webpack-plugin';
-
+import { testGlobals } from './test/globals';
 import globals from './globals';
 
-type JSONPrimitive = string | boolean | number;
-type JSONObject = { [string] : JSONPrimitive | JSONObject } | Array<JSONPrimitive | JSONObject>;
-type JSONObjectType = { [string] : JSONPrimitive | JSONObject };
-type JSONType = JSONObject | JSONPrimitive;
+const MODULE_NAME = 'paypal';
 
-function jsonifyPrimitives(item : JSONType) : JSONType {
-    if (Array.isArray(item)) {
-        return item.map(jsonifyPrimitives);
-    } else if (typeof item === 'object' && item !== null) {
-        let result = {};
-        for (let key of Object.keys(item)) {
-            result[key] = jsonifyPrimitives(item[key]);
-        }
-        return result;
-    } else if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean' || item === null || item === undefined) {
-        return JSON.stringify(item);
-    } else {
-        throw new TypeError(`Unrecognized type: ${ typeof item }`);
-    }
-}
+export const WEBPACK_CONFIG_TEST = getWebpackConfig({
+    entry:         './test/paypal.js',
+    libraryTarget: 'window',
 
-let babelConfig = JSON.parse(fs.readFileSync('./node_modules/grumbler-scripts/config/.babelrc-browser').toString()); // eslint-disable-line no-sync
+    test:   true,
+    debug:  true,
+    minify: true,
 
-babelConfig.babelrc = false;
-babelConfig.cacheDirectory = true;
-babelConfig.presets[0][1].modules = false;
-
-const FILE_NAME = 'checkout';
-
-type WebPackConfig = {
-    src? : string,
-    filename? : string,
-    modulename? : string,
-    target? : string,
-    minify? : boolean,
-    vars? : JSONObjectType,
-    test? : boolean,
-    chunkname? : string
-};
-
-export function getWebpackConfig({
-    src,
-    filename,
-    modulename,
-    target = 'window',
-    minify = false,
-    vars = {},
-    test = false,
-    chunkname
-} : WebPackConfig) : Object {
-
-    if (!src && !test) {
-        throw new Error(`Expected src`);
-    }
-
-    if (!filename && !test) {
-        throw new Error(`Expected filename`);
-    }
-
-    vars = {
+    vars: {
         ...globals,
+<<<<<<< HEAD
         ...vars,
 
         // $FlowFixMe
@@ -214,97 +161,33 @@ export let MAJOR = getWebpackConfig({
         __POST_ROBOT__: {
             ...globals.__POST_ROBOT__,
             __IE_POPUP_SUPPORT__: true
+=======
+        ...testGlobals,
+        __paypal_checkout__: {
+            ...testGlobals.__paypal_checkout__,
+            serverConfig: {
+                fundingEligibility: () => 'window.__TEST_FUNDING_ELIGIBILITY__'
+            }
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
         },
         __PAYPAL_CHECKOUT__: {
-            __LEGACY_SUPPORT__: false
-        }
+            __REMEMBERED_FUNDING__: () => 'window.__TEST_REMEMBERED_FUNDING__'
+        },
+        __CLIENT_ID__:   'abcxyz123',
+        __MERCHANT_ID__: 'abc'
     }
 });
 
-export let MINOR = getWebpackConfig({
-    src:      './src/load.js',
-    filename: `${ FILE_NAME }.${ globals.__PAYPAL_CHECKOUT__.__MINOR_VERSION__ }.js`,
-    vars:     {
-        __PAYPAL_CHECKOUT__: {
-            __MAJOR__: false
-        }
+export const WEBPACK_CONFIG_BUTTON_RENDER = getWebpackConfig({
+    entry:         './src/buttons/template/componentTemplate',
+    filename:      'button.js',
+    modulename:    MODULE_NAME,
+    web:           false,
+    libraryTarget: 'commonjs2',
+    vars:          {
+        ...globals,
+        __paypal_checkout__: {}
     }
 });
 
-export let MAJOR_MIN = getWebpackConfig({
-    src:      './src/load.js',
-    filename: `${ FILE_NAME }.min.js`,
-    minify:   true
-});
-
-export let MINOR_MIN = getWebpackConfig({
-    src:      './src/load.js',
-    filename: `${ FILE_NAME }.${ globals.__PAYPAL_CHECKOUT__.__MINOR_VERSION__ }.min.js`,
-    minify:   true,
-    vars:     {
-        __PAYPAL_CHECKOUT__: {
-            __MAJOR__: false
-        }
-    }
-});
-
-export let LIB = getWebpackConfig({
-    src:        './src/index.js',
-    filename:   `${ FILE_NAME }.lib.js`,
-    target:     `umd`,
-    modulename: `paypal`,
-    vars:       {
-        __PAYPAL_CHECKOUT__: {
-            __MAJOR__: false
-        }
-    }
-});
-
-export let BUTTON_RENDER = getWebpackConfig({
-    src:      './src/button/template/componentTemplate.jsx',
-    filename: `${ FILE_NAME }.button.render.js`,
-    target:   `commonjs`
-});
-
-export let CHILD_LOADER = getWebpackConfig({
-    src:      './src/loader/index.js',
-    filename: `checkout.child.loader.js`
-});
-
-export let CHILD_LOADER_MIN = getWebpackConfig({
-    src:      './src/loader/index.js',
-    filename: `checkout.child.loader.min.js`,
-    minify:   true
-});
-
-export let BUTTON = getWebpackConfig({
-    src:       './src/load.js',
-    filename:  `${ FILE_NAME }.button.v${ globals.__PAYPAL_CHECKOUT__.__MAJOR_VERSION__ }.js`,
-    chunkname: `${ FILE_NAME }.button.v${ globals.__PAYPAL_CHECKOUT__.__MAJOR_VERSION__ }.chunk.js`,
-
-    vars:     {
-        __PAYPAL_CHECKOUT__: {
-            __LEGACY_SUPPORT__: false
-        }
-    }
-});
-
-export let TEST = getWebpackConfig({
-    test: true,
-    vars: {
-        __PAYPAL_CHECKOUT__: {
-            __MAJOR__:         false,
-            __MAJOR_VERSION__: 'test',
-            __MINOR_VERSION__: 'test_minor'
-        }
-    }
-});
-
-export default [
-    BASE,
-    MAJOR, MINOR,
-    MAJOR_MIN, MINOR_MIN,
-    LIB,
-    BUTTON_RENDER,
-    CHILD_LOADER, CHILD_LOADER_MIN
-];
+export default [ WEBPACK_CONFIG_BUTTON_RENDER ];

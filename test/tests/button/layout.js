@@ -13,12 +13,14 @@ describe(`paypal button layouts`, () => {
 
     afterEach(() => {
         destroyTestContainer();
-        window.location.hash = '';
     });
 
     it('should render a maximum of 2 buttons horizontally', (done) => {
+        window.paypal.Buttons({
 
-        window.paypal.Button.render({
+            style: {
+                layout: 'horizontal'
+            },
 
             test: {
                 onRender({ fundingSources }) {
@@ -30,16 +32,21 @@ describe(`paypal button layouts`, () => {
                 }
             },
 
+<<<<<<< HEAD
             funding: {
                 allowed: [ window.paypal.FUNDING.CARD, window.paypal.FUNDING.CREDIT ]
             },
 
             payment() : string | ZalgoPromise<string> {
                 throw new Error('Expected payment to not be called');
+=======
+            createOrder() : string | ZalgoPromise<string> {
+                throw new Error('Expected createOrder to not be called');
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
             },
 
-            onAuthorize() {
-                throw new Error('Expected onAuthorize to not be called');
+            onApprove() {
+                throw new Error('Expected onApprove to not be called');
             },
 
             onCancel() {
@@ -48,12 +55,13 @@ describe(`paypal button layouts`, () => {
 
             onError: done
 
-        }, '#testContainer');
+        }).render('#testContainer');
     });
 
     it('should render a maximum of 4 buttons vertically', (done) => {
 
-        window.paypal.Button.render({
+
+        window.paypal.Buttons({
 
             test: {
                 onRender({ fundingSources }) {
@@ -65,20 +73,23 @@ describe(`paypal button layouts`, () => {
                 }
             },
 
+<<<<<<< HEAD
             funding: {
                 allowed: [ window.paypal.FUNDING.CARD, window.paypal.FUNDING.CREDIT, window.paypal.FUNDING.IDEAL, window.paypal.FUNDING.ELV ]
             },
 
+=======
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
             style: {
                 layout: 'vertical'
             },
 
-            payment() : string | ZalgoPromise<string> {
-                throw new Error('Expected payment to not be called');
+            createOrder() : string | ZalgoPromise<string> {
+                throw new Error('Expected createOrder to not be called');
             },
 
-            onAuthorize() {
-                throw new Error('Expected onAuthorize to not be called');
+            onApprove() {
+                throw new Error('Expected onApprove to not be called');
             },
 
             onCancel() {
@@ -87,6 +98,6 @@ describe(`paypal button layouts`, () => {
 
             onError: done
 
-        }, '#testContainer');
+        }).render('#testContainer');
     });
 });

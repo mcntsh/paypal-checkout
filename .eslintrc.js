@@ -5,15 +5,28 @@ module.exports = {
 
     'globals': {
         'Promise': false,
-        '__TEST__': true,
-        '__MIN__': true,
-        '__FILE_NAME__': true,
-        '__PAYPAL_CHECKOUT__': true
+        '__PAYPAL_CHECKOUT__': true,
+        '__paypal_checkout__': true,
+        '__sdk__': true,
+        '__LOCALE__': true,
+        '__CLIENT_ID__': true,
+        '__MERCHANT_ID__': true,
+        '__INTENT__': true,
+        '__COMMIT__': true,
+        '__VAULT__': true,
+        '__PORT__': true,
+        '__STAGE_HOST__': true,
+        '__HOST__': true,
+        '__PATH__': true
     },
 
     'rules': {
-        'promise/catch-or-return': 'off',
         'complexity': 'off',
-        'max-nested-callbacks': [ 'error', 5 ]
+        'max-nested-callbacks': [ 'error', 5 ],
+        'react/prop-types': 'off',
+        'react/style-prop-object': 'off',
+        'react/display-name': 'off',
+        'react/require-default-props': 'off',
+        'react/forbid-component-props': 'off'
     }
 };

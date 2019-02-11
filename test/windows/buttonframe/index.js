@@ -1,13 +1,17 @@
 /* @flow */
 
-import { generateECToken } from '../../tests/common';
+import { ZalgoPromise } from 'zalgo-promise/src';
+import { send } from 'post-robot/src';
 
-window.paypal.Button.render({
+import { generateOrderID } from '../../tests/common';
 
-    payment() : string {
-        return generateECToken();
+window.paypal.Buttons({
+
+    createOrder() : ZalgoPromise<string> {
+        return ZalgoPromise.resolve(generateOrderID());
     },
 
+<<<<<<< HEAD
     onAuthorize() {
         window.paypal.postRobot.send(window.top.frames[0], 'onAuthorize');
     },
@@ -15,9 +19,16 @@ window.paypal.Button.render({
     onShippingChange() {
         window.paypal.postRobot.send(window.top.frames[0], 'onShippingChange');
     }
+=======
+    onApprove() {
+        send(window.top.frames[0], 'onApprove');
+    },
+>>>>>>> 1e19587bbe0af79aef5d15f4d5aba17962e93aa0
 
-}, document.body).then(button => {
+    onShippingChange() {
+        send(window.top.frames[0], 'onShippingChange');
+    }
 
-    button.window.paypal.Checkout.contexts.iframe = (window.location.hash === '#iframe');
+}).render(document.body).then(button => {
     button.window.document.querySelector('button').click();
 });

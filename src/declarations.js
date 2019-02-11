@@ -1,14 +1,16 @@
 /* @flow */
 /* eslint import/unambiguous: 0 */
 
-declare var __TEST__: string;
-declare var __MIN__: boolean;
-declare var __FILE_NAME__ : string;
+import { FUNDING } from '@paypal/sdk-constants/src';
+
+import type { FundingEligibilityType } from './types';
 
 declare var __PAYPAL_CHECKOUT__ : {
-    __MAJOR_VERSION__ : string,
-    __MINOR_VERSION__ : string,
-    __DEFAULT_LOG_LEVEL__ : string,
-    __LEGACY_SUPPORT__ : boolean,
-    __MAJOR__ : boolean
-}
+    __REMEMBERED_FUNDING__ : Array<$Values<typeof FUNDING>> // eslint-disable-line flowtype/no-mutable-array
+};
+
+declare var __paypal_checkout__ : {
+    serverConfig : {
+        fundingEligibility : FundingEligibilityType
+    }
+};
