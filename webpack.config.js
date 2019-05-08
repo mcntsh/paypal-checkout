@@ -190,8 +190,7 @@ export function getWebpackConfig({
             library:        modulename,
             chunkFilename:  chunkname,
             pathinfo:       false,
-            jsonpFunction:  '__paypal_checkout_jsonp__',
-            publicPath:     'https://www.paypalobjects.com/api/'
+            jsonpFunction:  '__paypal_checkout_jsonp__'
         };
     }
 
@@ -263,7 +262,7 @@ export let LIB = getWebpackConfig({
 export let BUTTON_RENDER = getWebpackConfig({
     src:      './src/button/template/componentTemplate.jsx',
     filename: `${ FILE_NAME }.button.render.js`,
-    target:   `commonjs`
+    target:   `umd`
 });
 
 export let CHILD_LOADER = getWebpackConfig({
